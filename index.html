@@ -108,12 +108,43 @@
             color: #a0a0a0;
             font-family: monospace;
             font-size: 0.9rem;
-            user-select: all;
             cursor: pointer;
             padding: 0.5rem;
             background: rgba(0, 0, 0, 0.3);
             border-radius: 4px;
             display: inline-block;
+        }
+        
+        .site-url:hover {
+            color: #fff;
+        }
+        
+        .site-table {
+            width: 100%;
+            max-width: 1200px;
+            border-collapse: collapse;
+            margin-top: calc(100vh - 100px);
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+
+        .site-table.visible {
+            opacity: 1;
+        }
+        
+        .site-table th, .site-table td {
+            padding: 1rem;
+            text-align: left;
+            color: #fff;
+        }
+        
+        .site-table th {
+            font-size: 1.4rem;
+            font-weight: bold;
+        }
+        
+        .site-table td {
+            font-size: 1.2rem;
         }
         
         .password-modal {
@@ -195,6 +226,11 @@
                 grid-template-columns: 1fr;
                 gap: 0.8rem;
             }
+            
+            .site-table th, .site-table td {
+                padding: 0.8rem;
+                font-size: 1rem;
+            }
         }
     </style>
 </head>
@@ -225,35 +261,41 @@
         
         <div class="nav-grid">
             <div class="nav-item">
-                <h3 class="site-name">常用网站A</h3>
-                <p class="site-url">https://example-a.com</p>
+                <h3 class="site-name">梦之碎片工具箱</h3>
+                <p class="site-url">https://tools.dlozs.top/</p>
             </div>
-            
             <div class="nav-item">
-                <h3 class="site-name">常用网站B</h3>
-                <p class="site-url">https://example-b.com</p>
+                <h3 class="site-name">多功能工具箱</h3>
+                <p class="site-url">https://r2.dlozs.top/</p>
             </div>
-            
             <div class="nav-item">
-                <h3 class="site-name">云存储</h3>
-                <p class="site-url">a.dlozs.top</p>
+                <h3 class="site-name">自建wiki</h3>
+                <p class="site-url">https://wiki.dlozs.top/</p>
             </div>
-            
             <div class="nav-item">
-                <h3 class="site-name">项目资料</h3>
-                <p class="site-url">b.dlozs.top/projects</p>
-            </div>
-            
-            <div class="nav-item">
-                <h3 class="site-name">学习资源</h3>
-                <p class="site-url">c.dlozs.top/learning</p>
-            </div>
-            
-            <div class="nav-item">
-                <h3 class="site-name">个人博客</h3>
-                <p class="site-url">blog.dlozs.top</p>
+                <h3 class="site-name">子域名D</h3>
+                <p class="site-url">待填充</p>
             </div>
         </div>
+        
+        <table class="site-table" id="siteTable">
+            <tr>
+                <th>网站名</th>
+                <th>网站域名</th>
+            </tr>
+            <tr>
+                <td></td>
+                <td><span class="site-url"></span></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td><span class="site-url"></span></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td><span class="site-url"></span></td>
+            </tr>
+        </table>
         
         <footer>
             <p>© 2025 近衛憐的个人主页 • 当前时间: <span id="lastModifiedTime"></span></p>
@@ -275,6 +317,7 @@
         const documentTitle = document.querySelector('title');
         const backgroundSections = document.querySelectorAll('.background-section');
         const lastModifiedTime = document.getElementById('lastModifiedTime');
+        const siteTable = document.getElementById('siteTable');
 
         pageTitle.textContent = CONFIG.PAGE_TITLE;
         documentTitle.textContent = CONFIG.PAGE_TITLE;
@@ -292,6 +335,9 @@
             backgroundSections.forEach((section, index) => {
                 section.classList.toggle('active', index === currentIndex);
             });
+
+            // 控制表格在第二张图片时显示
+            siteTable.classList.toggle('visible', scrollPosition >= windowHeight);
         }
 
         const imageUrls = [
@@ -305,6 +351,7 @@
         imageUrls.forEach(url => {
             const img = new Image();
             img.src = url;
+            img.onerror = () => console.error(`Failed to preload image: ${url}`);
         });
 
         function updateLastModifiedTime() {
@@ -360,21 +407,51 @@
                 if (e.key === 'Enter') checkPassword();
             });
 
-            document.querySelectorAll('.site-url').forEach(el => {
-                el.addEventListener('click', () => {
-                    const textToCopy = el.textContent;
-                    navigator.clipboard.writeText(textToCopy).then(() => {
-                        const originalText = el.textContent;
-                        el.textContent = '已复制!';
-                        setTimeout(() => {
-                            el.textContent = originalText;
-                        }, 1500);
-                    });
+            // 子域名数据（顶部方块）
+            const subdomains = [
+                { name: '梦之碎片工具箱', url: 'https://tools.dlozs.top/' },
+                { name: '多功能工具箱', url: 'https://r2.dlozs.top/' },
+                { name: '自建wiki', url: 'https://wiki.dlozs.top/' },
+                { name: '子域名D', url: '' }
+            ];
+
+            // 常用网站数据（表格，供后续填充）
+            const sites = [
+                { name: '', url: '' },
+                { name: '', url: '' },
+                { name: '', url: '' }
+            ];
+
+            // 动态填充子域名（方块）
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach((item, index) => {
+                const nameEl = item.querySelector('.site-name');
+                const urlEl = item.querySelector('.site-url');
+                nameEl.textContent = subdomains[index].name;
+                urlEl.textContent = subdomains[index].url || '待填充';
+                urlEl.addEventListener('click', () => {
+                    if (subdomains[index].url) {
+                        window.open(subdomains[index].url, '_blank');
+                    }
+                });
+            });
+
+            // 动态填充常用网站（表格）
+            const tableRows = document.querySelectorAll('.site-table tr:not(:first-child)');
+            tableRows.forEach((row, index) => {
+                const nameCell = row.cells[0];
+                const urlCell = row.cells[1].querySelector('.site-url');
+                nameCell.textContent = sites[index].name || '待填充';
+                urlCell.textContent = sites[index].url || '待填充';
+                urlCell.addEventListener('click', () => {
+                    if (sites[index].url) {
+                        window.open(sites[index].url, '_blank');
+                    }
                 });
             });
 
             updateLastModifiedTime();
-            setInterval(updateLastModifiedTime, 60000); // 每分钟更新
+            setInterval(updateLastModifiedTime, 60000);
         }
 
         window.addEventListener('DOMContentLoaded', init);
